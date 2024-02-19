@@ -21,6 +21,7 @@ type migrationOpts struct {
 	clean     bool
 	create    bool
 	dataOnly  bool
+    tableName string
 }
 
 func main() {
@@ -31,6 +32,8 @@ func main() {
 	clean := flag.Bool("clean", true, "")
 	create := flag.Bool("create", true, "")
 	dataOnly := flag.Bool("data-only", false, "")
+
+	tableName := flag.String("table-name", "", "Name of the table to copy. If empty, the entire database is copied.")
 
 	flag.Parse()
 
@@ -65,6 +68,7 @@ func main() {
 		clean:     *clean,
 		create:    *create,
 		dataOnly:  *dataOnly,
+        tableName: *tableName
 	}
 
 	log.Println("[info] Running pre-checks...")
@@ -145,6 +149,9 @@ func runMigration(ctx context.Context, opts migrationOpts) error {
 	if opts.dataOnly {
 		dumpStr = dumpStr + " --data-only"
 	}
+   if opts.tableName != "" {
+        dumpStr += fmt.Sprintf(" -t %s", opts.tableName)
+    }
 
 	restoreStr := fmt.Sprintf("psql -d %s", opts.targetURI)
 	cmd := fmt.Sprintf("%s | %s", dumpStr, restoreStr)
